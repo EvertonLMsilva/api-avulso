@@ -12,7 +12,7 @@ func PortServer() (res string) {
 }
 
 func main() {
-	http.HandleFunc("/user/all", controllers.GetAllUser)
+	http.HandleFunc("/user/all", UserGetAllDto)
 
 	log.Println("Server listennig on $s", PortServer())
 	log.Fatal(http.ListenAndServe(PortServer(), nil))
