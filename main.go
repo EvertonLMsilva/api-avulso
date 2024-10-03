@@ -1,7 +1,6 @@
 package main
 
 import (
-	"api-avulso/controllers/user"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,7 +12,7 @@ func PortServer() (res string) {
 }
 
 func main() {
-	http.HandleFunc("/user/all", user.GetAllUser)
+	http.HandleFunc("/user/all", controllers.GetAllUser)
 
 	log.Println("Server listennig on $s", PortServer())
 	log.Fatal(http.ListenAndServe(PortServer(), nil))

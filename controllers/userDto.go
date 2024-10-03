@@ -1,4 +1,4 @@
-package user
+package controllers
 
 type UserGetAllDto struct {
 	name     string
