@@ -6,10 +6,10 @@ import (
 )
 
 // GetAllUser list all users
-func GetAllUser(reqW http.ResponseWriter, res http.Request) {
+func GetAllUser(w http.ResponseWriter, r *http.Request) {
 	resolveJson := `{ 
 		id: 00,
 		name: "Everton"
 	 }`
-	fmt.Fprintf(reqW, resolveJson)
+	fmt.Fprintf(w, resolveJson)
 }
