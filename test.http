@@ -1,0 +1,10 @@
+###
+POST http://localhost:8000/users
+Content-Type: application/json
+
+{"name": "Everton L M SIlva", "birthday": "23/12/1990"}
+
+
+###
+GET http://localhost:8000/users
+Content-Type: application/json

@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	dbconfig "github.com/EvertonLMsilva/api-avulso/cmd/app/dbConfig"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/akafka"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/repository"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/web"
@@ -22,7 +23,7 @@ func PortServer() (res string) {
 
 func main() {
 
-	db, err := sql.Open(PostgresDriver, DataSourceName)
+	db, err := sql.Open(dbconfig.PostgresDriver, dbconfig.DataSourceName)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +44,7 @@ func main() {
 	go http.ListenAndServe(PortServer(), r)
 
 	msgChan := make(chan *kafka.Message)
-	go akafka.Consume([]string{"users"}, "host.docker.internal:9094", msgChan)
+	go akafka.Consume([]string{"users"}, "host.docker.internal:9094,host.docker.internal:9092", msgChan)
 
 	for msg := range msgChan {
 		dto := usecase.CreateUserInputDto{}
