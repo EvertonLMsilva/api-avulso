@@ -8,11 +8,11 @@ import (
 	"net/http"
 
 	dbconfig "github.com/EvertonLMsilva/api-avulso/cmd/app/dbConfig"
-	"github.com/EvertonLMsilva/api-avulso/internal/infra/akafka"
+	"github.com/EvertonLMsilva/api-avulso/internal/infra/aKafka"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/repository"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/web"
 	"github.com/EvertonLMsilva/api-avulso/internal/usecase"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -44,7 +44,7 @@ func main() {
 	go http.ListenAndServe(PortServer(), r)
 
 	msgChan := make(chan *kafka.Message)
-	go akafka.Consume([]string{"users"}, "host.docker.internal:9094,host.docker.internal:9092", msgChan)
+	go aKafka.Consume([]string{"users"}, "host.docker.internal:9094,host.docker.internal:9092", msgChan)
 
 	for msg := range msgChan {
 		dto := usecase.CreateUserInputDto{}
