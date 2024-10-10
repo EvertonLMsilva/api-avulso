@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/EvertonLMsilva/api-avulso/internal/entity"
 )
@@ -15,18 +16,32 @@ func NewUserRepositoryPg(db *sql.DB) *UserRepositoryPG {
 }
 
 func (r *UserRepositoryPG) Create(user *entity.User) error {
-	_, err := r.DB.Exec("insert into api-avulso.users (id, name, birthday) values(?,?,?)",
-		user.ID, user.Name, user.Birthday)
+	var active int8 = 0
+
+	if user.Active {
+		active = 1
+	}
+
+	if user.Name == "" {
+		return fmt.Errorf("Name empty!")
+	}
+
+	if user.Birthday == "" {
+		return fmt.Errorf("Birthday empty!")
+	}
+
+	_, err := r.DB.Exec(
+		"INSERT INTO api_avulso.profile.users (id, name, birthday, active) VALUES ($1, $2, $3, $4)",
+		user.ID, user.Name, user.Birthday, active)
 
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (r *UserRepositoryPG) FindAll() ([]*entity.User, error) {
-	rows, err := r.DB.Query("SELECT id, name, birthday FROM api-avulso.users")
+	rows, err := r.DB.Query("SELECT * FROM api_avulso.profile.users")
 	if err != nil {
 		return nil, err
 	}
@@ -36,14 +51,21 @@ func (r *UserRepositoryPG) FindAll() ([]*entity.User, error) {
 	var users []*entity.User
 	for rows.Next() {
 		var user entity.User
-
-		err = rows.Scan(&user.ID, &user.Name, &user.Birthday)
+		err = rows.Scan(&user.ID, &user.Name, &user.Birthday, &user.Active)
 		if err != nil {
 			return nil, err
 		}
-
 		users = append(users, &user)
 	}
 
 	return users, nil
+}
+
+func (r *UserRepositoryPG) Disable(id string) error {
+	_, err := r.DB.Exec("UPDATE api_avulso.profile.users SET active='0' WHERE id=$1", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

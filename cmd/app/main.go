@@ -1,19 +1,17 @@
 package main
 
 import (
-	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
-	dbconfig "github.com/EvertonLMsilva/api-avulso/cmd/app/dbConfig"
-	"github.com/EvertonLMsilva/api-avulso/internal/infra/aKafka"
+	"github.com/EvertonLMsilva/api-avulso/cmd/app/dbConfig"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/repository"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/web"
-	"github.com/EvertonLMsilva/api-avulso/internal/usecase"
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/go-chi/chi/v5"
+	"github.com/EvertonLMsilva/api-avulso/internal/useCase"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 func PortServer() (res string) {
@@ -22,43 +20,39 @@ func PortServer() (res string) {
 }
 
 func main() {
-
-	db, err := sql.Open(dbconfig.PostgresDriver, dbconfig.DataSourceName)
-	if err != nil {
-		panic(err)
-	}
-
-	db.Close()
+	db := dbConfig.ConnectDb()
+	defer db.Close()
 
 	repository := repository.NewUserRepositoryPg(db)
-	createUserUseCase := usecase.NewCreateUserUseCase(repository)
-	listUserUseCase := usecase.NewListUserUsecase(repository)
 
-	userHandler := web.NewUserHandlers(createUserUseCase, listUserUseCase)
+	createUserUseCase := useCase.NewCreateUserUseCase(repository)
+	listUserUseCase := useCase.NewListUserUseCase(repository)
+	disableUserUseCase := useCase.NewDisableUserUseCase(repository)
+
+	userHandler := web.NewUserHandlers(createUserUseCase, listUserUseCase, disableUserUseCase)
 
 	r := chi.NewRouter()
-	r.Post("/user", userHandler.CreateUserHandler)
-	r.Get("/user", userHandler.ListUserHandler)
+	r.Use(middleware.Logger)
 
-	log.Println("Server listennig on $s", PortServer())
-	go http.ListenAndServe(PortServer(), r)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 
-	msgChan := make(chan *kafka.Message)
-	go aKafka.Consume([]string{"users"}, "host.docker.internal:9094,host.docker.internal:9092", msgChan)
-
-	for msg := range msgChan {
-		dto := usecase.CreateUserInputDto{}
-		err := json.Unmarshal(msg.Value, &dto)
-
-		if err != nil {
-			//log de erro
-			fmt.Printf("Message kafka error", err)
-		}
-		_, err = createUserUseCase.Execute(dto)
+	if r == nil {
+		panic(r)
 	}
 
-	// http.HandleFunc("/user/all", controllers.GetAllUser)
+	r.Route("/api", func(router chi.Router) {
+		router.Post("/user", userHandler.CreateUserHandler)
+		router.Get("/user", userHandler.ListUserHandler)
+		router.Delete("/user/{id}", userHandler.DisableUserHandler)
+	})
 
-	// log.Println("Server listennig on $s", PortServer())
-	// log.Fatal(http.ListenAndServe(PortServer(), nil))
+	log.Printf("Server listening on %s", PortServer())
+	http.ListenAndServe(PortServer(), r)
 }

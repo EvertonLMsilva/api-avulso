@@ -1,8 +1,9 @@
 package aKafka
 
 import (
+	"fmt"
+
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 func Consume(topics []string, servers string, msgChan chan *kafka.Message) {
@@ -13,7 +14,9 @@ func Consume(topics []string, servers string, msgChan chan *kafka.Message) {
 		"session.timeout.ms": 6000,
 	})
 
+	fmt.Printf("Error kafka", kafkaConsume)
 	if err != nil {
+		fmt.Printf("Error kafka", err)
 		panic(err)
 	}
 

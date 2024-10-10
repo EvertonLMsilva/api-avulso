@@ -8,7 +8,7 @@ services:
       - "8000:8000"
     extra_hosts:
       - "host.docker.internal:172.17.0.1"
-    
+
   postgres:
     image: postgres
     container_name: postgres
@@ -16,12 +16,10 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_ROOT_PASSWORD: admin@123
-      POSTGRES_DATABASE: api-avulso
+      POSTGRES_DATABASE: api_avulso
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin@123
-    extra_hosts:
-      - "host.docker.internal:172.17.0.1"
-  
+
   adminer:
     image: adminer
     restart: always
@@ -37,6 +35,12 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_ZOOKEEPER_CONNECT: localhost:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+      KAFKA_BROKER_ID: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: c0
+      KAFKA_CONFLUENT_LICENSE: "ABC123XYZ737BVT"
 
   kafka:
     image: confluentinc/cp-server:7.3.0
@@ -48,8 +52,15 @@ services:
       - "9092:9092"
       - "9094:9094"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.99.100:9092
-      LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-kraft:29092,PLAINTEXT_HOST://localhost:9092"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-kraft:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://kafka-kraft:29092,CONTROLLER://kafka-kraft:29093,PLAINTEXT_HOST://0.0.0.0:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      CLUSTER_ID: "q1Sh-9_ISia_zwGINzRvyQ"
     restart: always

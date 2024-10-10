@@ -1,16 +1,20 @@
-package usecase
+package useCase
 
-import "github.com/EvertonLMsilva/api-avulso/internal/entity"
+import (
+	"github.com/EvertonLMsilva/api-avulso/internal/entity"
+)
 
 type CreateUserInputDto struct {
 	Name     string "json:name"
 	Birthday string "json:birthday"
+	Active   bool   "json:active"
 }
 
 type CreateUserOutputDto struct {
 	ID       string
 	Name     string
 	Birthday string
+	Active   bool
 }
 
 type CreateUserUseCase struct {
@@ -22,8 +26,9 @@ func NewCreateUserUseCase(userRepository entity.UserRepository) *CreateUserUseCa
 }
 
 func (u *CreateUserUseCase) Execute(input CreateUserInputDto) (*CreateUserOutputDto, error) {
-	user := entity.NewUser(input.Name, input.Birthday)
+	user := entity.NewUser(input.Name, input.Birthday, input.Active)
 	err := u.UserRepository.Create(user)
+
 	if err != nil {
 		return nil, err
 	}
@@ -32,5 +37,6 @@ func (u *CreateUserUseCase) Execute(input CreateUserInputDto) (*CreateUserOutput
 		ID:       user.ID,
 		Name:     user.Name,
 		Birthday: user.Birthday,
+		Active:   user.Active,
 	}, nil
 }

@@ -1,10 +1,17 @@
 ###
-POST http://localhost:8000/users
+POST http://localhost:3000/api/user
 Content-Type: application/json
 
-{"name": "Everton L M SIlva", "birthday": "23/12/1990"}
+{
+    "name": "Kayane Soares de souza", 
+    "birthday": "2004-03-19",
+    "active": true
+}
 
 
 ###
-GET http://localhost:8000/users
+GET http://localhost:3000/api/user
 Content-Type: application/json
+
+###
+DELETE http://localhost:3000/api/user/fca5f31c-b632-44f5-8fc7-854ac5913abf

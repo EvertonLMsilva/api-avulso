@@ -1,4 +1,4 @@
-package usecase
+package useCase
 
 import "github.com/EvertonLMsilva/api-avulso/internal/entity"
 
@@ -12,7 +12,7 @@ type ListUserUseCase struct {
 	UserRepository entity.UserRepository
 }
 
-func NewListUserUsecase(userRepository entity.UserRepository) *ListUserUseCase {
+func NewListUserUseCase(userRepository entity.UserRepository) *ListUserUseCase {
 	return &ListUserUseCase{UserRepository: userRepository}
 }
 
