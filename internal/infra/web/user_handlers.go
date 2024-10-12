@@ -12,17 +12,20 @@ type UserHandlers struct {
 	CreateUserUseCase  *useCase.CreateUserUseCase
 	ListUserUseCase    *useCase.ListUserUseCase
 	DisableUserUseCase *useCase.DisableUserUseCase
+	UpdateUserUseCase  *useCase.UpdateUserUseCase
 }
 
 func NewUserHandlers(
 	createUserUseCase *useCase.CreateUserUseCase,
 	listUserUseCase *useCase.ListUserUseCase,
 	disableUseCase *useCase.DisableUserUseCase,
+	updateUseCase *useCase.UpdateUserUseCase,
 ) *UserHandlers {
 	return &UserHandlers{
 		CreateUserUseCase:  createUserUseCase,
 		ListUserUseCase:    listUserUseCase,
 		DisableUserUseCase: disableUseCase,
+		UpdateUserUseCase:  updateUseCase,
 	}
 }
 
@@ -61,6 +64,33 @@ func (u *UserHandlers) ListUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(bytes)
+}
+
+func (u *UserHandlers) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	var input useCase.UpdateUserInputDto
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	id, err := utils.DecodeStringIDFromURI(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	output, err := u.UpdateUserUseCase.Execute(input, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(output)
+	return
 }
 
 func (u *UserHandlers) DisableUserHandler(w http.ResponseWriter, r *http.Request) {

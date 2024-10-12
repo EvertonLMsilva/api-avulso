@@ -8,10 +8,17 @@ Content-Type: application/json
     "active": true
 }
 
+###
+PUT http://localhost:3000/api/user/75eacef7-4804-4c55-8eef-0a1e2c69f485
+Content-Type: application/json
+
+{
+    "birthday": "2004-03-21"
+}
 
 ###
 GET http://localhost:3000/api/user
 Content-Type: application/json
 
 ###
-DELETE http://localhost:3000/api/user/fca5f31c-b632-44f5-8fc7-854ac5913abf
+DELETE http://localhost:3000/api/user/75eacef7-4804-4c55-8eef-0a1e2c69f485

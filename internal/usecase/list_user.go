@@ -6,6 +6,7 @@ type ListUsersOutputDto struct {
 	ID       string
 	Name     string
 	Birthday string
+	Active   bool
 }
 
 type ListUserUseCase struct {
@@ -28,6 +29,7 @@ func (u *ListUserUseCase) Execute() ([]*ListUsersOutputDto, error) {
 			ID:       user.ID,
 			Name:     user.Name,
 			Birthday: user.Birthday,
+			Active:   user.Active,
 		})
 	}
 

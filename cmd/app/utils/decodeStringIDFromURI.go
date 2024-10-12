@@ -14,6 +14,5 @@ func DecodeStringIDFromURI(r *http.Request) (string, error) {
 		fmt.Println("Id Disable 02", id)
 		return "", errors.New("empty_id_error")
 	}
-
 	return id, nil
 }

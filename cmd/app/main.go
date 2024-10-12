@@ -4,22 +4,23 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
-	"github.com/EvertonLMsilva/api-avulso/cmd/app/dbConfig"
+	"github.com/EvertonLMsilva/api-avulso/cmd/app/utils"
+	"github.com/EvertonLMsilva/api-avulso/internal/infra/dbConfig"
+	"github.com/EvertonLMsilva/api-avulso/internal/infra/environments"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/repository"
 	"github.com/EvertonLMsilva/api-avulso/internal/infra/web"
 	"github.com/EvertonLMsilva/api-avulso/internal/useCase"
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 )
 
-func PortServer() (res string) {
-	const PORT int32 = 3000
-	return fmt.Sprintf(":%v", PORT)
-}
-
 func main() {
+	err := environments.StartConfig()
+	utils.FatalError(err)
+
 	db := dbConfig.ConnectDb()
 	defer db.Close()
 
@@ -28,8 +29,9 @@ func main() {
 	createUserUseCase := useCase.NewCreateUserUseCase(repository)
 	listUserUseCase := useCase.NewListUserUseCase(repository)
 	disableUserUseCase := useCase.NewDisableUserUseCase(repository)
+	updateUserUseCase := useCase.NewUpdateUserUseCase(repository)
 
-	userHandler := web.NewUserHandlers(createUserUseCase, listUserUseCase, disableUserUseCase)
+	userHandler := web.NewUserHandlers(createUserUseCase, listUserUseCase, disableUserUseCase, updateUserUseCase)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -50,9 +52,23 @@ func main() {
 	r.Route("/api", func(router chi.Router) {
 		router.Post("/user", userHandler.CreateUserHandler)
 		router.Get("/user", userHandler.ListUserHandler)
+		router.Put("/user/{id}", userHandler.UpdateUserHandler)
 		router.Delete("/user/{id}", userHandler.DisableUserHandler)
 	})
 
-	log.Printf("Server listening on %s", PortServer())
-	http.ListenAndServe(PortServer(), r)
+	log.Printf("Server listening on %d", environments.Env.ApiPort)
+
+	s := &http.Server{
+		Addr:           PortServer(),
+		Handler:        r,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	log.Fatal(s.ListenAndServe())
+}
+
+func PortServer() (res string) {
+	return fmt.Sprintf(":%d", environments.Env.ApiPort)
 }
